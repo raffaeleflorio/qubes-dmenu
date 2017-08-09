@@ -169,68 +169,94 @@ index d605ab4..bcdffb9 100644
  		} else if (i + 1 == argc)
  			usage();
  		/* these options take one argument */
-diff --git a/dmenu_dom0 b/dmenu_dom0
-new file mode 100755
-index 0000000..78c16e4
---- /dev/null
-+++ b/dmenu_dom0
-@@ -0,0 +1,2 @@
-+#!/bin/sh
-+dmenu_path_dom0 | dmenu "$@" | ${SHELL:-"/bin/sh"} &
-diff --git a/dmenu_path b/dmenu_path_dom0
-similarity index 66%
-rename from dmenu_path
-rename to dmenu_path_dom0
-index 338bac4..8b2174b 100644
+diff --git a/dmenu_path b/dmenu_path
+old mode 100644
+new mode 100755
+index 338bac4..ac8e149
 --- a/dmenu_path
-+++ b/dmenu_path_dom0
-@@ -1,9 +1,9 @@
++++ b/dmenu_path
+@@ -1,13 +1,53 @@
  #!/bin/sh
  cachedir=${XDG_CACHE_HOME:-"$HOME/.cache"}
- if [ -d "$cachedir" ]; then
+-if [ -d "$cachedir" ]; then
 -	cache=$cachedir/dmenu_run
-+	cache=$cachedir/dmenu_dom0
- else
+-else
 -	cache=$HOME/.dmenu_cache # if no xdg dir, fall back to dotfile in ~
+-fi
+-IFS=:
+-if stest -dqr -n "$cache" $PATH; then
++
++function dom0_cache
++{
++    if [ -d "$cachedir" ]; then
++	cache=$cachedir/dmenu_dom0
++    else
 +	cache=$HOME/.dmenu_dom0_cache # if no xdg dir, fall back to dotfile in ~
++    fi
++
++    IFS=:
++    if stest -dqr -n "$cache" $PATH; then
+ 	stest -flx $PATH | sort -u | tee "$cache"
+-else
++    else
++	cat "$cache"
++    fi
++}
++
++function vms_cache
++{
++    if [ -d "$cachedir" ]; then
++	cache=$cachedir/dmenu_vms
++    else
++	cache=$HOME/.dmenu_vms_cache # if no xdg dir, fall back to dotfile in ~
++    fi
++
++    APPDIR=$HOME/.local/share/applications
++    if stest -dqr -n "$cache" $APPDIR; then
++	for file in $(stest -flr  $APPDIR | sort -u); do
++	    echo -e "$(grep '^Exec' "$APPDIR/$file" | cut -d'=' -f2)\t$(grep '^Name' "$APPDIR/$file" | cut -d'=' -f2)"
++	done | tee "$cache"
++    else
+ 	cat "$cache"
++    fi
++}
++
++function usage
++{
++    echo "usage: $0 dom0 | vms" >&2
++}
++
++if [ $# -eq 0 ]; then
++    usage
  fi
- IFS=:
- if stest -dqr -n "$cache" $PATH; then
-diff --git a/dmenu_path_vms b/dmenu_path_vms
-new file mode 100755
-index 0000000..03562b9
---- /dev/null
-+++ b/dmenu_path_vms
-@@ -0,0 +1,16 @@
-+#!/bin/sh
-+cachedir=${XDG_CACHE_HOME:-"$HOME/.cache"}
-+if [ -d "$cachedir" ]; then
-+    cache=$cachedir/dmenu_vms
-+else
-+    cache=$HOME/.dmenu_vms_cache # if no xdg dir, fall back to dotfile in ~
++
++case $1 in
++    dom0) dom0_cache ;;
++    vms) vms_cache ;;
++    *) usage ;;
++esac
++
++
+diff --git a/dmenu_run b/dmenu_run
+index 834ede5..abcd94f 100755
+--- a/dmenu_run
++++ b/dmenu_run
+@@ -1,2 +1,17 @@
+ #!/bin/sh
+-dmenu_path | dmenu "$@" | ${SHELL:-"/bin/sh"} &
++
++function usage
++{
++    echo "usage: $0 dom0 | vms [dmenu arguments]" >&2
++}
++
++
++if [ $# -eq 0 ];; then
++    usage
 +fi
 +
-+APPDIR=$HOME/.local/share/applications
-+if stest -dqr -n "$cache" $APPDIR; then
-+    for file in $(stest -flr  $APPDIR | sort -u); do
-+	echo -e "$(grep '^Exec' "$APPDIR/$file" | cut -d'=' -f2)\t$(grep '^Name' "$APPDIR/$file" | cut -d'=' -f2)"
-+    done | tee "$cache"
-+else
-+    cat "$cache"
-+fi
-diff --git a/dmenu_run b/dmenu_run
-deleted file mode 100755
-index 834ede5..0000000
---- a/dmenu_run
-+++ /dev/null
-@@ -1,2 +0,0 @@
--#!/bin/sh
--dmenu_path | dmenu "$@" | ${SHELL:-"/bin/sh"} &
-diff --git a/dmenu_vms b/dmenu_vms
-new file mode 100644
-index 0000000..b7e69c2
---- /dev/null
-+++ b/dmenu_vms
-@@ -0,0 +1,2 @@
-+#!/bin/sh
-+dmenu_path_vms | dmenu "$@" | ${SHELL:-"/bin/sh"} &
++case $1 in
++    dom0) shift; dmenu_path dom0 | dmenu "$@" | ${SHELL:-"/bin/sh"} & ;;
++    vms) shift; dmenu_path vms | dmenu -a "$@" | ${SHELL:-"/bin/sh"} & ;;
++    *) usage ;;
++esac
