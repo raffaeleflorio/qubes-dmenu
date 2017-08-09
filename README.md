@@ -11,7 +11,7 @@ Clone this repo in a vm:
 $ git clone https://github.com/raffaeleflorio/qubes-dmenu.git
 ```
 
-Check signature (you can get my pgp key from https://raffaeleflorio.github.io or from pgp.mit.edu, of course check its fingerprint):
+Check signature (you can get my pgp key from https://raffaeleflorio.github.io or from https://pgp.mit.edu, of course check its fingerprint):
 ```
 $ git log --show-signature -1
 ```
