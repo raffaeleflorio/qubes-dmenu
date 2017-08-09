@@ -238,7 +238,7 @@ index 338bac4..ac8e149
 +
 +
 diff --git a/dmenu_run b/dmenu_run
-index 834ede5..abcd94f 100755
+index 834ede5..5c389f4 100755
 --- a/dmenu_run
 +++ b/dmenu_run
 @@ -1,2 +1,17 @@
@@ -251,7 +251,7 @@ index 834ede5..abcd94f 100755
 +}
 +
 +
-+if [ $# -eq 0 ];; then
++if [ $# -eq 0 ]; then
 +    usage
 +fi
 +
