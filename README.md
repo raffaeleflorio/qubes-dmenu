@@ -16,7 +16,10 @@ Check signature (you can get my pgp key from https://raffaeleflorio.github.io or
 $ git log --show-signature -1
 ```
 
-Clone dmenu in the same vm. The code with various clone urls is here: http://git.suckless.org/dmenu
+Clone dmenu in the same vm. The code is here: https://git.suckless.org/dmenu
+```
+$ git clone https://git.suckless.org/dmenu
+```
 
 Copy the patch in the dwm directory:
 ```
