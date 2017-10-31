@@ -1,9 +1,9 @@
 # qubes-dmenu
 
-Qubes OS patch for dmenu 4.7 (http://tools.suckless.org/dmenu).
+dmenu for Qubes OS
 
 # dwm patch
-Qubes OS patch for dwm 6.1 at https://github.com/raffaeleflorio/qubes-dwm
+dwm for Qubes OS at https://github.com/raffaeleflorio/qubes-dwm
 
 # Installation instruction
 Clone this repo in a vm:
@@ -16,38 +16,21 @@ Check signature (you can get my pgp key from https://raffaeleflorio.github.io or
 $ git log --show-signature -1
 ```
 
-Clone dmenu in the same vm. The code is here: https://git.suckless.org/dmenu
+Install dependecies, apply the patch and build dmenu:
 ```
-$ git clone https://git.suckless.org/dmenu
-```
-
-Copy the patch in the dwm directory:
-```
-$ cp qubes-dmenu/dmenu-4.7.patch dmenu/
-```
-
-Apply the patch:
-```
-$ cd dmenu
-$ make config.h
-$ git apply dmenu-4.7.patch
-```
-
-Install dependencies and compile dmenu:
-```
-# dnf install $(cat dependencies)
+# make dep
 $ make
 ```
 
-Copy needed files to Dom0:
+Install in Dom0:
 ```
-Dom0# qvm-run --pass-io <vmname> "cat /path/to/dmenu/dmenu" > /usr/local/bin/dmenu
+Dom0# qvm-run --pass-io <vmname> "cat /path/to/qubes-dmenu/dmenu/dmenu" > /usr/local/bin/dmenu
 Dom0# chmod u+x /usr/local/bin/dmenu
-Dom0# qvm-run --pass-io <vmname> "cat /path/to/dmenu/dmenu_path" > /usr/local/bin/dmenu_path
+Dom0# qvm-run --pass-io <vmname> "cat /path/to/qubes-dmenu/dmenu/dmenu_path" > /usr/local/bin/dmenu_path
 Dom0# chmod u+x /usr/local/bin/dmenu_path
-Dom0# qvm-run --pass-io <vmname> "cat /path/to/dmenu/dmenu_run" > /usr/local/bin/dmenu_run
+Dom0# qvm-run --pass-io <vmname> "cat /path/to/qubes-dmenu/dmenu/dmenu_run" > /usr/local/bin/dmenu_run
 Dom0# chmod u+x /usr/local/bin/dmenu_run
-Dom0# qvm-run --pass-io <vmname> "cat /path/to/dmenu/stest" > /usr/local/bin/stest
+Dom0# qvm-run --pass-io <vmname> "cat /path/to/qubes-dmenu/dmenu/stest" > /usr/local/bin/stest
 Dom0# chmod u+x /usr/local/bin/stest
 ```
 

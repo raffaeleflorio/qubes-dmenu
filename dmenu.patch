@@ -12,7 +12,7 @@ index 1edb647..084bd37 100644
  };
  /* -l option; if nonzero, dmenu uses vertical list with given number of lines */
 diff --git a/dmenu.c b/dmenu.c
-index d605ab4..bcdffb9 100644
+index d605ab4..cc689a9 100644
 --- a/dmenu.c
 +++ b/dmenu.c
 @@ -24,17 +24,21 @@
@@ -132,7 +132,7 @@ index d605ab4..bcdffb9 100644
 +
 +		if (!(items[i].maintext = strdup(buf)))
  			die("cannot strdup %u bytes:", strlen(buf) + 1);
-+		
++
  		items[i].out = 0;
  		drw_font_getexts(drw->fonts, buf, strlen(buf), &tmpmax, NULL);
  		if (tmpmax > inputw) {
@@ -172,10 +172,10 @@ index d605ab4..bcdffb9 100644
 diff --git a/dmenu_path b/dmenu_path
 old mode 100644
 new mode 100755
-index 338bac4..ac8e149
+index 338bac4..0fb0a84
 --- a/dmenu_path
 +++ b/dmenu_path
-@@ -1,13 +1,53 @@
+@@ -1,13 +1,51 @@
  #!/bin/sh
  cachedir=${XDG_CACHE_HOME:-"$HOME/.cache"}
 -if [ -d "$cachedir" ]; then
@@ -235,8 +235,6 @@ index 338bac4..ac8e149
 +    vms) vms_cache ;;
 +    *) usage ;;
 +esac
-+
-+
 diff --git a/dmenu_run b/dmenu_run
 index 834ede5..5c389f4 100755
 --- a/dmenu_run
