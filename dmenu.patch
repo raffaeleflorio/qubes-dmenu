@@ -18,12 +18,12 @@ index d605ab4..cc689a9 100644
 @@ -24,17 +24,21 @@
  #define LENGTH(X)             (sizeof X / sizeof X[0])
  #define TEXTW(X)              (drw_fontset_getwidth(drw, (X)) + lrpad)
- 
+
 +#define SKEY(x)              (x->alias ? x->alias : x->maintext)
 +
  /* enums */
  enum { SchemeNorm, SchemeSel, SchemeOut, SchemeLast }; /* color schemes */
- 
+
  struct item {
 -	char *text;
 +	char *alias;
@@ -31,7 +31,7 @@ index d605ab4..cc689a9 100644
  	struct item *left, *right;
  	int out;
  };
- 
+
  static char text[BUFSIZ] = "";
  static char *embed;
 +static int aliased = 0;
@@ -50,15 +50,15 @@ index d605ab4..cc689a9 100644
 +		if ((i += (lines > 0) ? bh : MIN(TEXTW(SKEY(prev->left)), n)) > n)
  			break;
  }
- 
+
 @@ -122,7 +126,7 @@ drawitem(struct item *item, int x, int y, int w)
  	else
  		drw_setscheme(drw, scheme[SchemeNorm]);
- 
+
 -	return drw_text(drw, x, y, w, bh, lrpad / 2, item->text, 0);
 +	return drw_text(drw, x, y, w, bh, lrpad / 2, SKEY(item), 0);
  }
- 
+
  static void
 @@ -164,7 +168,7 @@ drawmenu(void)
  		}
@@ -70,7 +70,7 @@ index d605ab4..cc689a9 100644
  			w = TEXTW(">");
  			drw_setscheme(drw, scheme[SchemeNorm]);
 @@ -229,16 +233,16 @@ match(void)
- 
+
  	matches = lprefix = lsubstr = matchend = prefixend = substrend = NULL;
  	textsize = strlen(text) + 1;
 -	for (item = items; item && item->text; item++) {
@@ -150,7 +150,7 @@ index d605ab4..cc689a9 100644
 +	inputw = items ? TEXTW(SKEY((&items[imax]))) : 0;
  	lines = MIN(lines, i);
  }
- 
+
 @@ -636,7 +653,7 @@ setup(void)
  static void
  usage(void)
@@ -175,7 +175,7 @@ new mode 100755
 index 338bac4..0fb0a84
 --- a/dmenu_path
 +++ b/dmenu_path
-@@ -1,13 +1,51 @@
+@@ -1,13 +1,56 @@
  #!/bin/sh
  cachedir=${XDG_CACHE_HOME:-"$HOME/.cache"}
 -if [ -d "$cachedir" ]; then
@@ -214,7 +214,12 @@ index 338bac4..0fb0a84
 +    APPDIR=$HOME/.local/share/applications
 +    if stest -dqr -n "$cache" $APPDIR; then
 +	for file in $(stest -flr  $APPDIR | sort -u); do
-+	    echo -e "$(grep '^Exec' "$APPDIR/$file" | cut -d'=' -f2)\t$(grep '^Name' "$APPDIR/$file" | cut -d'=' -f2)"
++            cmd=$(grep '^Exec=' "$APPDIR/$file")
++            cmd=${cmd:5}
++
++            name=$(grep '^Name=' "$APPDIR/$file")
++            name=${name:5}
++	    echo -e "$cmd\t$name"
 +	done | tee "$cache"
 +    else
  	cat "$cache"
