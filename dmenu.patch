@@ -1,16 +1,3 @@
-diff --git a/config.h b/config.h
-index 1edb647..084bd37 100644
---- a/config.h
-+++ b/config.h
-@@ -10,7 +10,7 @@ static const char *prompt      = NULL;      /* -p  option; prompt to the left of
- static const char *colors[SchemeLast][2] = {
- 	/*     fg         bg       */
- 	[SchemeNorm] = { "#bbbbbb", "#222222" },
--	[SchemeSel] = { "#eeeeee", "#005577" },
-+	[SchemeSel] = { "#3874D8", "#FFFFFF" },
- 	[SchemeOut] = { "#000000", "#00ffff" },
- };
- /* -l option; if nonzero, dmenu uses vertical list with given number of lines */
 diff --git a/dmenu.c b/dmenu.c
 index d605ab4..cc689a9 100644
 --- a/dmenu.c
@@ -18,12 +5,12 @@ index d605ab4..cc689a9 100644
 @@ -24,17 +24,21 @@
  #define LENGTH(X)             (sizeof X / sizeof X[0])
  #define TEXTW(X)              (drw_fontset_getwidth(drw, (X)) + lrpad)
-
+ 
 +#define SKEY(x)              (x->alias ? x->alias : x->maintext)
 +
  /* enums */
  enum { SchemeNorm, SchemeSel, SchemeOut, SchemeLast }; /* color schemes */
-
+ 
  struct item {
 -	char *text;
 +	char *alias;
@@ -31,7 +18,7 @@ index d605ab4..cc689a9 100644
  	struct item *left, *right;
  	int out;
  };
-
+ 
  static char text[BUFSIZ] = "";
  static char *embed;
 +static int aliased = 0;
@@ -50,15 +37,15 @@ index d605ab4..cc689a9 100644
 +		if ((i += (lines > 0) ? bh : MIN(TEXTW(SKEY(prev->left)), n)) > n)
  			break;
  }
-
+ 
 @@ -122,7 +126,7 @@ drawitem(struct item *item, int x, int y, int w)
  	else
  		drw_setscheme(drw, scheme[SchemeNorm]);
-
+ 
 -	return drw_text(drw, x, y, w, bh, lrpad / 2, item->text, 0);
 +	return drw_text(drw, x, y, w, bh, lrpad / 2, SKEY(item), 0);
  }
-
+ 
  static void
 @@ -164,7 +168,7 @@ drawmenu(void)
  		}
@@ -70,7 +57,7 @@ index d605ab4..cc689a9 100644
  			w = TEXTW(">");
  			drw_setscheme(drw, scheme[SchemeNorm]);
 @@ -229,16 +233,16 @@ match(void)
-
+ 
  	matches = lprefix = lsubstr = matchend = prefixend = substrend = NULL;
  	textsize = strlen(text) + 1;
 -	for (item = items; item && item->text; item++) {
@@ -150,7 +137,7 @@ index d605ab4..cc689a9 100644
 +	inputw = items ? TEXTW(SKEY((&items[imax]))) : 0;
  	lines = MIN(lines, i);
  }
-
+ 
 @@ -636,7 +653,7 @@ setup(void)
  static void
  usage(void)
@@ -172,10 +159,10 @@ index d605ab4..cc689a9 100644
 diff --git a/dmenu_path b/dmenu_path
 old mode 100644
 new mode 100755
-index 338bac4..0fb0a84
+index 338bac4..c79e559
 --- a/dmenu_path
 +++ b/dmenu_path
-@@ -1,13 +1,56 @@
+@@ -1,13 +1,85 @@
  #!/bin/sh
  cachedir=${XDG_CACHE_HOME:-"$HOME/.cache"}
 -if [ -d "$cachedir" ]; then
@@ -185,45 +172,57 @@ index 338bac4..0fb0a84
 -fi
 -IFS=:
 -if stest -dqr -n "$cache" $PATH; then
+-	stest -flx $PATH | sort -u | tee "$cache"
+-else
+-	cat "$cache"
 +
 +function dom0_cache
 +{
 +    if [ -d "$cachedir" ]; then
-+	cache=$cachedir/dmenu_dom0
++	    cache=$cachedir/dmenu_dom0
 +    else
-+	cache=$HOME/.dmenu_dom0_cache # if no xdg dir, fall back to dotfile in ~
++	    cache=$HOME/.dmenu_dom0_cache # if no xdg dir, fall back to dotfile in ~
 +    fi
 +
 +    IFS=:
 +    if stest -dqr -n "$cache" $PATH; then
- 	stest -flx $PATH | sort -u | tee "$cache"
--else
++	    stest -flx $PATH | sort -u | tee "$cache"
 +    else
-+	cat "$cache"
++	    cat "$cache"
 +    fi
 +}
 +
 +function vms_cache
 +{
 +    if [ -d "$cachedir" ]; then
-+	cache=$cachedir/dmenu_vms
++	    cache=$cachedir/dmenu_vms
 +    else
-+	cache=$HOME/.dmenu_vms_cache # if no xdg dir, fall back to dotfile in ~
++	    cache=$HOME/.dmenu_vms_cache # if no xdg dir, fall back to dotfile in ~
 +    fi
 +
 +    APPDIR=$HOME/.local/share/applications
 +    if stest -dqr -n "$cache" $APPDIR; then
-+	for file in $(stest -flr  $APPDIR | sort -u); do
-+            cmd=$(grep '^Exec=' "$APPDIR/$file")
-+            cmd=${cmd:5}
++        for file in $(stest -flr  $APPDIR | sort -u); do
++                cmd=$(grep '^Exec=' "$APPDIR/$file")
++                cmd=${cmd:5}
 +
-+            name=$(grep '^Name=' "$APPDIR/$file")
-+            name=${name:5}
-+	    echo -e "$cmd\t$name"
-+	done | tee "$cache"
++                name=$(grep '^Name=' "$APPDIR/$file")
++                name=${name:5}
++            echo -e "$cmd\t$name"
++        done | tee "$cache"
 +    else
- 	cat "$cache"
++	    cat "$cache"
 +    fi
++}
++
++function disp_handler
++{
++	if [[ "$1" == "disp"* ]]; then
++		template_vm_name=`qvm-prefs $1 template`
++		echo $template_vm_name
++	else
++		echo $1
++	fi
 +}
 +
 +function usage
@@ -233,18 +232,37 @@ index 338bac4..0fb0a84
 +
 +if [ $# -eq 0 ]; then
 +    usage
++    exit
  fi
 +
 +case $1 in
-+    dom0) dom0_cache ;;
-+    vms) vms_cache ;;
-+    *) usage ;;
++    dom0)
++	    dom0_cache
++	    ;;
++
++    vms)
++	    vms_cache
++	    ;;
++
++    vm)
++	    shift;
++	    vmname=$(disp_handler $1)
++	    cmds=$(vms_cache | grep -P "\t$vmname:")
++	    if [[ "$vmname" != "$1" ]]; then
++		cmds=$(echo "$cmds" | sed -e "s/--dispvm=$vmname/$1/g" | sed -e "s/$vmname/$1/g" | sed -e "s/\t[^:]*:/\t/g" | grep -v "Qube Settings" )
++	    fi
++	    echo "$cmds" | sed -e "s/\t[^:]*:/\t/g"
++	    ;;
++
++    *)
++	    usage 
++	    ;;
 +esac
 diff --git a/dmenu_run b/dmenu_run
-index 834ede5..5c389f4 100755
+index 834ede5..3845cfb 100755
 --- a/dmenu_run
 +++ b/dmenu_run
-@@ -1,2 +1,17 @@
+@@ -1,2 +1,40 @@
  #!/bin/sh
 -dmenu_path | dmenu "$@" | ${SHELL:-"/bin/sh"} &
 +
@@ -253,13 +271,36 @@ index 834ede5..5c389f4 100755
 +    echo "usage: $0 dom0 | vms [dmenu arguments]" >&2
 +}
 +
++get_id() {
++    local id=$(xprop -root _NET_ACTIVE_WINDOW)
++    echo ${id##* } # extract id
++}
++
++get_color() {
++    local id=$(get_id)
++    local vm=$(xprop -id $id | grep '_QUBES_LABEL_COLOR(CARDINAL)')
++    local color=$(echo $vm | sed -e "s/[^=]* = //")	# extract color
++    if [[ "$color" -eq "0" ]]; then
++        echo "000";
++    else
++    	echo $(printf '%x' $color)
++    fi
++}
 +
 +if [ $# -eq 0 ]; then
 +    usage
++    exit
 +fi
 +
 +case $1 in
-+    dom0) shift; dmenu_path dom0 | dmenu "$@" | ${SHELL:-"/bin/sh"} & ;;
-+    vms) shift; dmenu_path vms | dmenu -a "$@" | ${SHELL:-"/bin/sh"} & ;;
++    dom0) shift; dmenu_path dom0 | dmenu "$@" -i -nb "#3874D8" -nf "#FFF" -p "[Dom0] Run:" | ${SHELL:-"/bin/sh"} & ;;
++    vms) shift; dmenu_path vms | dmenu -i -a "$@" -nf "#FFF" -p "[VMs] Run:" | ${SHELL:-"/bin/sh"} & ;;
++    vm)
++	    shift;
++	    vm=$1;
++	    shift;
++	    nb=$(get_color)
++	    dmenu_path vm "$vm" | dmenu -i -a "$@" -nb "#$nb" -nf "#FFF" -p "[$vm] Run:" | ${SHELL:-"/bin/sh"} &
++    ;;
 +    *) usage ;;
 +esac
