@@ -227,7 +227,7 @@ index 338bac4..c79e559
 +
 +function usage
 +{
-+    echo "usage: $0 dom0 | vms | vm" >&2
++    echo "usage: $0 dom0 | vms | vm <vm_name>" >&2
 +}
 +
 +if [ $# -eq 0 ]; then
@@ -268,7 +268,7 @@ index 834ede5..3845cfb 100755
 +
 +function usage
 +{
-+    echo "usage: $0 dom0 | vms | vm [dmenu arguments]" >&2
++    echo "usage: $0 dom0 | vms | vm <vm_name> [dmenu arguments]" >&2
 +}
 +
 +get_id() {
